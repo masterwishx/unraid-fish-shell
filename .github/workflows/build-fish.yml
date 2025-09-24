@@ -3,7 +3,7 @@ name: Build Fish Slackware Package
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 12 * * 1" # every Monday, 12:00 UTC
+    - cron: "30 16 * * *" # every Monday, 12:00 UTC
 
 jobs:
   build:
