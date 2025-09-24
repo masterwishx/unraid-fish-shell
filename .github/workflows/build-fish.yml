@@ -86,3 +86,13 @@ jobs:
         with:
           name: fish-txz
           path: fish-*.txz
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.latest_version }}                  # your tag
+          name: "Fish ${{ env.latest_version }} Slackware Package"
+          files: fish-${{ env.latest_version }}-x86_64-1_da.txz  # attach your .txz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
