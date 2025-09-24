@@ -18,15 +18,21 @@ jobs:
           sudo apt-get install -y wget xz-utils jq fakeroot
 
       - name: Get latest Fish release URL
-        id: fish
+        id: get_url
         run: |
           url=$(wget -qO- https://api.github.com/repos/fish-shell/fish-shell/releases/latest \
-            | jq -r '.assets[] | select(.browser_download_url | test("linux_x86_64\\.tar\\.xz$")) | .browser_download_url')
+            | jq -r '.assets[] 
+            | select(.name | test("linux-x86_64\\.tar\\.xz$")) 
+            | .browser_download_url')
+
           filename=$(basename "$url")
           version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-linux_x86_64\.tar\.xz/\1/')
+          
+          if [ -z "$url" ]; then
+            echo "No x86_64 asset found!" >&2
+            exit 1
+          fi
           echo "url=$url" >> $GITHUB_ENV
-          echo "filename=$filename" >> $GITHUB_ENV
-          echo "version=$version" >> $GITHUB_ENV
 
       - name: Download fish tarball
         run: wget -q ${{ env.url }}
