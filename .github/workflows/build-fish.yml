@@ -26,7 +26,7 @@ jobs:
             | .browser_download_url')
 
           filename=$(basename "$url")
-          version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-linux_x86_64\.tar\.xz/\1/')
+          version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-linux-x86_64\.tar\.xz/\1/')
           
           if [ -z "$url" ]; then
             echo "No x86_64 asset found!" >&2
@@ -51,13 +51,14 @@ jobs:
           cp install/doinst.sh pkg/install/
           cp install/slack-desc pkg/install/
 
-      - name: Build .txz package
+      - name: Create Slackware package
         run: |
           cd pkg
-          fakeroot tar cvf ../fish-${{ env.version }}.tar *
+          fakeroot tar cvf ../fish-${{ env.version }}-x86_64-1_da.tar *
           cd ..
-          xz -z -9 -e fish-${{ env.version }}.tar
-          mv fish-${{ env.version }}.tar.xz fish-${{ env.version }}_da.txz
+          xz -z -9 -e fish-${{ env.version }}-x86_64-1_da.tar
+          mv fish-${{ env.version }}-x86_64-1_da.tar.xz fish-${{ env.version }}-x86_64-1_da.txz
+
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
