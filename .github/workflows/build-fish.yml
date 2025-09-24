@@ -42,7 +42,7 @@ jobs:
           mkdir fishpkg
           tar -xJf ${{ env.filename }} -C fishpkg --strip-components=1
           mkdir -p pkg/usr/bin
-          cp fishpkg/bin/fish pkg/usr/bin/fish
+          cp fishpkg/fish pkg/usr/bin/fish
 
       - name: Add install scripts
         run: |
