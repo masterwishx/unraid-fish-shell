@@ -28,7 +28,7 @@ jobs:
         run: |
           latest_url=$(wget -qO- https://api.github.com/repos/fish-shell/fish-shell/releases/latest \
             | jq -r '.assets[] | select(.name | test("linux-x86_64\\.tar\\.xz$")) | .browser_download_url')
-          if [ -z "$url" ]; then
+          if [ -z "$latest_url" ]; then
             echo "No x86_64 asset found!" >&2
             exit 1
           fi
