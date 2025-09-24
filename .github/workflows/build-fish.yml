@@ -88,7 +88,7 @@ jobs:
           name: "Fish ${{ env.latest_version }} Slackware Package"
           body: |
             This release includes:
-             - Fish ${{ env.latest_version }} all-in-one binary `fish-${{ env.latest_version }}-linux-*.tar.xz` experimental package with a single standalone `fish` binary for any Linux.
+             - Fish ${{ env.latest_version }} all-in-one binary `${{ env.latest_file }}` experimental package with a single standalone `fish` binary for any Linux.
              - Packaged for Unraid (Slackware package).
              - Installation instructions in README.md.
           draft: false        # <--- publish immediately   
