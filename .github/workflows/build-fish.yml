@@ -1,0 +1,68 @@
+name: Build Fish Slackware Package
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 1" # every Monday, 12:00 UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget xz-utils jq fakeroot
+
+      - name: Get latest Fish release URL
+        id: fish
+        run: |
+          url=$(wget -qO- https://api.github.com/repos/fish-shell/fish-shell/releases/latest \
+            | jq -r '.assets[] | select(.browser_download_url | test("Linux_x86_64\\.tar\\.xz$")) | .browser_download_url')
+          filename=$(basename "$url")
+          version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-Linux_x86_64\.tar\.xz/\1/')
+          echo "url=$url" >> $GITHUB_ENV
+          echo "filename=$filename" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
+
+      - name: Download fish tarball
+        run: wget -q ${{ env.url }}
+
+      - name: Extract single fish binary
+        run: |
+          mkdir fishpkg
+          tar -xJf ${{ env.filename }} -C fishpkg --strip-components=1
+          mkdir -p pkg/usr/bin
+          cp fishpkg/bin/fish pkg/usr/bin/fish
+
+      - name: Add install scripts
+        run: |
+          mkdir -p pkg/install
+          cp install/doinst.sh pkg/install/
+          cp install/slack-desc pkg/install/
+
+      - name: Build .txz package
+        run: |
+          cd pkg
+          fakeroot tar cvf ../fish-${{ env.version }}.tar *
+          cd ..
+          xz -z -9 -e fish-${{ env.version }}.tar
+          mv fish-${{ env.version }}.tar.xz fish-${{ env.version }}_da.txz
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fish-txz
+          path: fish-*.txz
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.version }}
+          name: "Fish ${{ env.version }} Slackware Package"
+          files: fish-*.txz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
