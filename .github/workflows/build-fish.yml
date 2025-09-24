@@ -2,7 +2,7 @@ name: Auto Build & Release Fish Slackware Package
 
 on:
   schedule:
-    - cron: '0 4 * * *'  # daily at 04:00 UTC
+    - cron: "0 4 * * *" # daily at 04:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed to see all tags
+          fetch-depth: 0 # needed to see all tags
 
       - name: Install dependencies
         run: |
@@ -43,14 +43,19 @@ jobs:
         id: check_tag
         run: |
           if git rev-parse "v${{ env.latest_version }}" >/dev/null 2>&1; then
-            echo "Version ${{ env.latest_version }} already built. Exiting."
-            exit 0
+           echo "Version ${{ env.latest_version }} already built. Skipping."
+           echo "skip_build=true" >> $GITHUB_ENV
+           exit 0
+          else
+           echo "skip_build=false" >> $GITHUB_ENV
           fi
 
       - name: Download fish tarball
+        if: env.skip_build == 'false'
         run: wget -q ${{ env.latest_url }} -O fish.tar.xz
 
       - name: Extract fish binary
+        if: env.skip_build == 'false'
         run: |
           mkdir fishpkg
           tar -xJf fish.tar.xz -C fishpkg
@@ -59,12 +64,14 @@ jobs:
           chmod 755 pkg/usr/bin/fish
 
       - name: Add install scripts
+        if: env.skip_build == 'false'
         run: |
           mkdir -p pkg/install
           cp install/doinst.sh pkg/install/
           cp install/slack-desc pkg/install/
 
       - name: Build Slackware .txz package
+        if: env.skip_build == 'false'
         run: |
           cd pkg
           fakeroot tar cvf ../fish-${{ env.latest_version }}-x86_64-1_da.tar *
@@ -73,6 +80,7 @@ jobs:
           mv fish-${{ env.latest_version }}-x86_64-1_da.tar.xz fish-${{ env.latest_version }}-x86_64-1_da.txz
 
       - name: Commit & push tag
+        if: env.skip_build == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -82,6 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
+        if: env.skip_build == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.latest_version }}
@@ -91,7 +100,7 @@ jobs:
              - Fish ${{ env.latest_version }} all-in-one binary `${{ env.latest_file }}` experimental package with a single standalone `fish` binary for any Linux.
              - Packaged for Unraid (Slackware package).
              - Installation instructions in README.md.
-          draft: false        # <--- publish immediately   
+          draft: false # <--- publish immediately
           files: fish-${{ env.latest_version }}-x86_64-1_da.txz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
