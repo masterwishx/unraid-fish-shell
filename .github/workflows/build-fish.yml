@@ -34,15 +34,16 @@ jobs:
           fi
           echo "url=$url" >> $GITHUB_ENV
 
-      - name: Download fish tarball
-        run: wget -q ${{ env.url }}
+      - name: Download latest fish tarball
+        run: wget -q ${{ env.url }} -O fish.tar.xz
 
-      - name: Extract single fish binary
+      - name: Extract fish binary
         run: |
           mkdir fishpkg
-          tar -xJf ${{ env.filename }} -C fishpkg --strip-components=1
+          tar -xJf fish.tar.xz -C fishpkg --strip-components=1
           mkdir -p pkg/usr/bin
           cp fishpkg/fish pkg/usr/bin/fish
+
 
       - name: Add install scripts
         run: |
