@@ -11,7 +11,7 @@ config() {
   # Otherwise, we leave the .new copy for the admin to consider...
 }
 
-chmod 755 usr/bin/fish
+#chmod 755 usr/bin/fish
 echo yes | /usr/bin/fish --install
 
 config etc/fish/config.fish.new

@@ -1,18 +1,26 @@
 name: Build Fish Slackware Package
 
+# Trigger only on tag push, e.g., v4.0.8
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+
   schedule:
-    - cron: "40 13 * * *" # every Monday, 12:00 UTC
+     - cron: '0 4 * * *'  # every day at 04:00 UTC      
+
+permissions:
+  contents: write  # needed to create releases
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y wget xz-utils jq fakeroot
@@ -20,21 +28,21 @@ jobs:
       - name: Get latest Fish release URL
         id: get_url
         run: |
+          # Fetch latest release info
           url=$(wget -qO- https://api.github.com/repos/fish-shell/fish-shell/releases/latest \
-            | jq -r '.assets[] 
-            | select(.name | test("linux-x86_64\\.tar\\.xz$")) 
-            | .browser_download_url')
-
-          filename=$(basename "$url")
-          version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-linux-x86_64\.tar\.xz/\1/')
-          
+            | jq -r '.assets[] | select(.name | test("linux-x86_64\\.tar\\.xz$")) | .browser_download_url')
           if [ -z "$url" ]; then
             echo "No x86_64 asset found!" >&2
             exit 1
           fi
+          filename=$(basename "$url")
+          # Extract version number from filename
+          version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-linux-x86_64\.tar\.xz/\1/')
           echo "url=$url" >> $GITHUB_ENV
+          echo "filename=$filename" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
 
-      - name: Download latest fish tarball
+      - name: Download fish tarball
         run: wget -q ${{ env.url }} -O fish.tar.xz
 
       - name: Extract fish binary
@@ -43,7 +51,7 @@ jobs:
           tar -xJf fish.tar.xz -C fishpkg
           mkdir -p pkg/usr/bin
           cp fishpkg/fish pkg/usr/bin/fish
-
+          chmod 755 pkg/usr/bin/fish
 
       - name: Add install scripts
         run: |
@@ -51,14 +59,13 @@ jobs:
           cp install/doinst.sh pkg/install/
           cp install/slack-desc pkg/install/
 
-      - name: Create Slackware package
+      - name: Build Slackware .txz package
         run: |
           cd pkg
           fakeroot tar cvf ../fish-${{ env.version }}-x86_64-1_da.tar *
           cd ..
           xz -z -9 -e fish-${{ env.version }}-x86_64-1_da.tar
           mv fish-${{ env.version }}-x86_64-1_da.tar.xz fish-${{ env.version }}-x86_64-1_da.txz
-
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
@@ -69,7 +76,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.version }}
+          tag_name: ${{ github.ref_name }}
           name: "Fish ${{ env.version }} Slackware Package"
           files: fish-*.txz
         env:
