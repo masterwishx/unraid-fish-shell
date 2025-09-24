@@ -40,7 +40,7 @@ jobs:
       - name: Extract fish binary
         run: |
           mkdir fishpkg
-          tar -xJf fish.tar.xz -C fishpkg --strip-components=1
+          tar -xJf fish.tar.xz -C fishpkg
           mkdir -p pkg/usr/bin
           cp fishpkg/fish pkg/usr/bin/fish
 
