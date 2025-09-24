@@ -1,49 +1,54 @@
-name: Build Fish Slackware Package
+name: Auto Build & Release Fish Slackware Package
 
-# Trigger only on tag push, e.g., v4.0.8
 on:
-  push:
-    tags:
-      - 'v*.*.*'
-
   schedule:
-     - cron: '0 4 * * *'  # every day at 04:00 UTC      
+    - cron: '0 4 * * *'  # daily at 04:00 UTC
+  workflow_dispatch:
 
 permissions:
-  contents: write  # needed to create releases
+  contents: write
+  id-token: write  # needed if using actions/create-release (GH App token)
 
 jobs:
-  build:
+  auto_build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed to see all tags
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget xz-utils jq fakeroot
+          sudo apt-get install -y wget xz-utils jq git fakeroot
 
-      - name: Get latest Fish release URL
-        id: get_url
+      - name: Get latest Fish release info
+        id: get_latest
         run: |
-          # Fetch latest release info
-          url=$(wget -qO- https://api.github.com/repos/fish-shell/fish-shell/releases/latest \
+          latest_url=$(wget -qO- https://api.github.com/repos/fish-shell/fish-shell/releases/latest \
             | jq -r '.assets[] | select(.name | test("linux-x86_64\\.tar\\.xz$")) | .browser_download_url')
           if [ -z "$url" ]; then
             echo "No x86_64 asset found!" >&2
             exit 1
           fi
-          filename=$(basename "$url")
-          # Extract version number from filename
-          version=$(echo "$filename" | sed -E 's/fish-([0-9.]+)-linux-x86_64\.tar\.xz/\1/')
-          echo "url=$url" >> $GITHUB_ENV
-          echo "filename=$filename" >> $GITHUB_ENV
-          echo "version=$version" >> $GITHUB_ENV
+
+          latest_file=$(basename "$latest_url")
+          latest_version=$(echo "$latest_file" | sed -E 's/fish-([0-9.]+)-linux-x86_64\.tar\.xz/\1/')
+          echo "latest_url=$latest_url" >> $GITHUB_ENV
+          echo "latest_file=$latest_file" >> $GITHUB_ENV
+          echo "latest_version=$latest_version" >> $GITHUB_ENV
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ env.latest_version }}" >/dev/null 2>&1; then
+            echo "Tag exists, skipping release."
+            exit 0
+          fi
 
       - name: Download fish tarball
-        run: wget -q ${{ env.url }} -O fish.tar.xz
+        run: wget -q ${{ env.latest_url }} -O fish.tar.xz
 
       - name: Extract fish binary
         run: |
@@ -62,22 +67,22 @@ jobs:
       - name: Build Slackware .txz package
         run: |
           cd pkg
-          fakeroot tar cvf ../fish-${{ env.version }}-x86_64-1_da.tar *
+          fakeroot tar cvf ../fish-${{ env.latest_version }}-x86_64-1_da.tar *
           cd ..
-          xz -z -9 -e fish-${{ env.version }}-x86_64-1_da.tar
-          mv fish-${{ env.version }}-x86_64-1_da.tar.xz fish-${{ env.version }}-x86_64-1_da.txz
+          xz -z -9 -e fish-${{ env.latest_version }}-x86_64-1_da.tar
+          mv fish-${{ env.latest_version }}-x86_64-1_da.tar.xz fish-${{ env.latest_version }}-x86_64-1_da.txz
+
+      - name: Commit & Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag v${{ env.latest_version }}
+          git push origin v${{ env.latest_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
           name: fish-txz
           path: fish-*.txz
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: "Fish ${{ env.version }} Slackware Package"
-          files: fish-*.txz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
