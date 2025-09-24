@@ -7,11 +7,11 @@ on:
 
 permissions:
   contents: write
-  id-token: write  # needed if using actions/create-release (GH App token)
 
 jobs:
-  auto_build:
+  auto_build_release:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
         id: check_tag
         run: |
           if git rev-parse "v${{ env.latest_version }}" >/dev/null 2>&1; then
-            echo "Tag exists, skipping release."
+            echo "Version ${{ env.latest_version }} already built. Exiting."
             exit 0
           fi
 
@@ -72,7 +72,7 @@ jobs:
           xz -z -9 -e fish-${{ env.latest_version }}-x86_64-1_da.tar
           mv fish-${{ env.latest_version }}-x86_64-1_da.tar.xz fish-${{ env.latest_version }}-x86_64-1_da.txz
 
-      - name: Commit & Tag
+      - name: Commit & push tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -81,18 +81,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: fish-txz
-          path: fish-*.txz
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.latest_version }}                  # your tag
+          tag_name: v${{ env.latest_version }}
           name: "Fish ${{ env.latest_version }} Slackware Package"
-          files: fish-${{ env.latest_version }}-x86_64-1_da.txz  # attach your .txz
+          files: fish-${{ env.latest_version }}-x86_64-1_da.txz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
