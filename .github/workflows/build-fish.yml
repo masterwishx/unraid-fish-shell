@@ -38,6 +38,7 @@ jobs:
           echo "latest_url=$latest_url" >> $GITHUB_ENV
           echo "latest_file=$latest_file" >> $GITHUB_ENV
           echo "latest_version=$latest_version" >> $GITHUB_ENV
+          echo "pkg_file=fish-${latest_version}-x86_64-1_da.txz" >> $GITHUB_ENV
 
       - name: Check if tag exists
         id: check_tag
@@ -89,6 +90,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update README with latest release info
+        if: env.skip_build == 'false'
+        run: |
+          sed -i "s/PACKAGE_FILE/${{ env.pkg_file }}/" README.md
+          sed -i "s/UPSTREAM_FILE/${{ env.latest_file }}/" README.md
+
+      - name: Commit README update
+        if: env.skip_build == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update README for release v${{ env.latest_version }}" || echo "No changes to commit"
+          git push
+          
       - name: Create GitHub Release
         if: env.skip_build == 'false'
         uses: softprops/action-gh-release@v2
@@ -97,10 +113,13 @@ jobs:
           name: "Fish ${{ env.latest_version }} Slackware Package"
           body: |
             This release includes:
-             - Fish ${{ env.latest_version }} all-in-one binary `${{ env.latest_file }}` experimental package with a single standalone `fish` binary for any Linux.
-             - Packaged for Unraid (Slackware package).
-             - Installation instructions in README.md.
+
+            - Slackware package: **${{ env.pkg_file }}**.
+            - Built from upstream fish release: **${{ env.latest_file }}**.
+            - Contains a single standalone `fish` binary for any Linux.
+            - Packaged for Unraid.
+            - Installation instructions in README.md.
           draft: false # <--- publish immediately
-          files: fish-${{ env.latest_version }}-x86_64-1_da.txz
+          files: ${{ env.pkg_file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

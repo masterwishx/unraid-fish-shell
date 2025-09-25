@@ -3,11 +3,15 @@
 ## Fish packed for Unraid (Slackware 15.x)
 
 * This release includes:
-  * Fish-shell Latest version of `fish-4.0.8-linux-*.tar.xz`
-   all-in-one binary that is an experimental package containing a single standalone `fish` binary for any Linux.
-  * Packaged for Unraid - Slackware package.
 
-* Old compiled versions for Slackware :
+  * Slackware package: **PACKAGE_FILE**.
+  * Built from upstream fish release: **UPSTREAM_FILE**.
+  * Contains a single standalone `fish` binary for any Linux.
+  * Packaged for Unraid.
+  * Installation instructions in README.md.
+
+## Old compiled versions for Slackware
+
 <https://github.com/masterwishx/Develop-Project/tree/main/Fish>
 
 ## How to use
