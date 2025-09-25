@@ -93,8 +93,10 @@ jobs:
       - name: Update README with latest release info
         if: env.skip_build == 'false'
         run: |
-          sed -i "/<!--PACKAGE_FILE-->/c\* Slackware package: **${{ env.pkg_file }}**" README.md
-          sed -i "/<!--UPSTREAM_FILE-->/c\* Built from upstream fish release: **${{ env.latest_file }}**" README.md
+          # Update Slackware package line
+          sed -i "s|^\* Slackware package:.*|* Slackware package: **${{ env.pkg_file }}**|" README.md
+          # Update upstream fish release line
+          sed -i "s|^\* Built from upstream fish release:.*|* Built from upstream fish release: **${{ env.latest_file }}**|" README.md
 
       - name: Commit README update
         if: env.skip_build == 'false'

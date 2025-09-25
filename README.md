@@ -2,11 +2,9 @@
 
 ## Fish packed for Unraid (Slackware 15.x)
 
-* This release includes:
-  <!--PACKAGE_FILE-->
-  * Slackware package: **fish-PLACEHOLDER.txz**.
-  <!--UPSTREAM_FILE-->
-  * Built from upstream fish release: **fish-PLACEHOLDER.tar.xz**.
+* This release includes:  
+  * Slackware package: **fish-4.0.7-x86_64-1_da.txz**
+  * Built from upstream fish release: **fish-4.0.7-linux-x86_64.tar.xz**
   * Contains a single standalone `fish` binary for any Linux.
   * Packaged for Unraid.
   * Installation instructions in README.md.
