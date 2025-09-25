@@ -91,7 +91,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update README with latest release info
-        if: env.skip_build == 'false'
+        if: env.skip_build == 'true'
         run: |
           # Update Slackware package line
           sed -i "s|^\* Slackware package:.*|* Slackware package: **${{ env.pkg_file }}**|" README.md
@@ -99,7 +99,7 @@ jobs:
           sed -i "s|^\* Built from upstream fish release:.*|* Built from upstream fish release: **${{ env.latest_file }}**|" README.md
 
       - name: Commit README update
-        if: env.skip_build == 'false'
+        if: env.skip_build == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
