@@ -4,8 +4,8 @@
 
 * This release includes:
 
-  * Slackware package: **PACKAGE_FILE**.
-  * Built from upstream fish release: **UPSTREAM_FILE**.
+  * Slackware package: **fish-4.0.8-x86_64-1_da.txz**.
+  * Built from upstream fish release: **fish-4.0.8-linux-x86_64.tar.xz**.
   * Contains a single standalone `fish` binary for any Linux.
   * Packaged for Unraid.
   * Installation instructions in README.md.
