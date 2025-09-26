@@ -15,8 +15,8 @@
 
 ## How to use
 
-1. Copy this file to your USB disk - /boot/extra/ for autoinstall on boot.
-2. run "fish" command in console.
+1. Copy the package file to your USB disk - `/boot/extra/` for autoinstall on boot.
+2. Run `fish` command in console.
 3. Enjoy.
 
 ## About Fish
