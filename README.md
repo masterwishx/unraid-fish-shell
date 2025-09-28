@@ -1,6 +1,6 @@
 # Fish-shell for Unraid - Slackware
 
-## Fish packed for Unraid (Slackware 15.x)
+## Fish packaged for Unraid (Slackware)
 
 * This release includes:  
   * Slackware package: **fish-4.1.0-x86_64-1_da.txz**
