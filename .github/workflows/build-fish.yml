@@ -90,7 +90,7 @@ jobs:
 
       - name: Generate repository metadata files
         if: env.skip_build == 'false'
-        run: ./.github/scripts/generate-repo-files.sh slackware
+        run: ./.github/scripts/generate-repo-files.sh
 
       - name: Commit repository files
         if: env.skip_build == 'false'
