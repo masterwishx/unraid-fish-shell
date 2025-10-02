@@ -4,9 +4,9 @@
 #
 # Generates Slackware repository metadata files:
 # - CHECKSUMS.md5: MD5 checksums for all package files
-# - FILELIST: Detailed package file listing
+# - FILE_LIST: Detailed package file listing
 
-LIST_FILE="FILELIST"
+LIST_FILE="FILE_LIST"
 CHECKSUMS_FILE="CHECKSUMS.md5"
 
 set -e
