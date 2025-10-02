@@ -145,6 +145,6 @@ jobs:
             - Packaged for Unraid.
             - Installation instructions in README.md.
           draft: false # <--- publish immediately
-          files: ${{ env.pkg_file }}
+          files: slackware/${{ env.pkg_file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
