@@ -29,7 +29,7 @@
 
 1. Manually install the un-get plugin from your server's `Plugins` -> `Install Plugin` tab using this URL:
 
-   ```
+   ```text
    https://raw.githubusercontent.com/ich777/un-get/master/un-get.plg
    ```
 
