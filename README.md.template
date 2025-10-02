@@ -25,25 +25,31 @@
 2. Run `fish` command in console.
 3. Enjoy.
 
-### Method 2 - Install via [un-get](https://github.com/ich777/un-get)
+### Method 2 - Install and keep updated via [un-get](https://github.com/ich777/un-get)
 
-```sh
-# Add the repo to un-get
-echo "{{REPO_URL}}/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
+1. Manually install the un-get plugin from your server's `Plugins` -> `Install Plugin` tab using this URL:
 
-# Update un-get sources
-un-get update
+   ```
+   https://raw.githubusercontent.com/ich777/un-get/master/un-get.plg
+   ```
 
-# Install fish
-un-get install fish
+2. ```sh
+   # Add this repo as a source to un-get
+   echo "{{REPO_URL}}/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
 
-# Upgrade fish in the future
-un-get update && un-get upgrade fish
-```
+   # Update un-get sources
+   un-get update
 
-### Bonus: Change default shell to fish
+   # Install fish
+   un-get install fish
 
-Add `chsh -s "$(which fish)"` to `/boot/config/go` to change the default shell to fish on boot.
+   # Upgrade fish in the future
+   un-get update && un-get upgrade fish
+   ```
+
+### Optional: Change the default shell to fish
+
+Run `chsh -s "$(which fish)"` to change the default shell to fish. Add the command to `/boot/config/go` to change it on boot.
 
 ```sh
 echo -e '\n# Change default shell to fish\nchsh -s "$(which fish)"' >> /boot/config/go
@@ -51,8 +57,7 @@ echo -e '\n# Change default shell to fish\nchsh -s "$(which fish)"' >> /boot/con
 
 ## About Fish
 
-- Fish - fish is a smart and user-friendly command line
-  shell for Linux, macOS, and the rest of the family.
+- Fish - fish is a smart and user-friendly command line shell for Linux, macOS, and the rest of the family.
 
 ![image](https://user-images.githubusercontent.com/28630321/193850149-76a497c7-cb1a-4fb5-86f9-7d5e8aad77e5.png)
 
