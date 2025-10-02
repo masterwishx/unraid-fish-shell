@@ -80,6 +80,29 @@ jobs:
           xz -z -9 -e fish-${{ env.latest_version }}-x86_64-1_da.tar
           mv fish-${{ env.latest_version }}-x86_64-1_da.tar.xz fish-${{ env.latest_version }}-x86_64-1_da.txz
 
+      - name: Create Slackware repository directory
+        if: env.skip_build == 'false'
+        run: mkdir -p slackware
+
+      - name: Move package to repository directory
+        if: env.skip_build == 'false'
+        run: mv ${{ env.pkg_file }} slackware/
+
+      - name: Generate repository metadata files
+        if: env.skip_build == 'false'
+        run: ./.github/scripts/generate-repo-files.sh slackware
+
+      - name: Commit repository files
+        if: env.skip_build == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add slackware/
+          git commit -m "Add Slackware package and repository files for v${{ env.latest_version }}" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Commit & push tag
         if: env.skip_build == 'false'
         run: |
@@ -90,13 +113,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update README with latest release info
+      - name: Generate README from template
         if: env.skip_build == 'false'
         run: |
-          # Update Slackware package line
-          sed -i "s|\* Slackware package:.*|* Slackware package: **${{ env.pkg_file }}**|" README.md
-          # Update upstream fish release line
-          sed -i "s|\* Built from upstream fish release:.*|* Built from upstream fish release: **${{ env.latest_file }}**|" README.md
+          cp -f README.md.template README.md
+          sed -i '1i ---\nThis is an auto-generated file. Please edit README.md.template instead.\n---\n' README.md
+          sed -i "s|{{PKG_FILE}}|${{ env.pkg_file }}|g" README.md
+          sed -i "s|{{UPSTREAM_FILE}}|${{ env.latest_file }}|g" README.md
+          sed -i "s|{{REPO_URL}}|https://raw.githubusercontent.com/${{ github.repository }}/main/|g" README.md
 
       - name: Commit README update
         if: env.skip_build == 'false'
@@ -106,7 +130,7 @@ jobs:
           git add README.md
           git commit -m "Update README for release v${{ env.latest_version }}" || echo "No changes to commit"
           git push
-          
+
       - name: Create GitHub Release
         if: env.skip_build == 'false'
         uses: softprops/action-gh-release@v2
