@@ -18,13 +18,19 @@
 ### Method 1 - Manual install
 
 1. Copy the package file to your USB disk - `/boot/extra/` for auto-install on boot.
-   1. Quick install: `wget -O /boot/extra/{{PKG_FILE}} {{REPO_URL}}/slackware/{{PKG_FILE}} && installpkg /boot/extra/{{PKG_FILE}}`
+   1. Quick install:
+   ```sh
+   wget -O /boot/extra/{{PKG_FILE}} {{REPO_URL}}/slackware/{{PKG_FILE}} && installpkg /boot/extra/{{PKG_FILE}}
+   ```
 2. Run `fish` command in console.
 3. Enjoy.
 
 ### Method 2 - Install via [un-get](https://github.com/ich777/un-get)
 
 2. Add `{{REPO_URL}}/slackware/ unraid-fish-shell` to `/boot/config/plugins/un-get/sources.list`
+   ```sh
+   echo "{{REPO_URL}}/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
+   ```
 3. Run `un-get install fish`.
 4. Update using `un-get upgrade fish`.
 
