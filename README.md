@@ -20,7 +20,7 @@
 1. Copy the package file to your USB disk - `/boot/extra/` for auto-install on boot.  
    Quick install without reboot needed:
    ```sh
-   wget -O /boot/extra/fish-4.1.1-x86_64-1_da.txz https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/slackware-repo/slackware/fish-4.1.1-x86_64-1_da.txz && installpkg /boot/extra/fish-4.1.1-x86_64-1_da.txz
+   wget -O /boot/extra/fish-4.1.1-x86_64-1_da.txz https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/slackware-repo/slackware/fish-4.1.1-x86_64-1_da.txz && installpkg /boot/extra/fish-4.1.1-x86_64-1_da.txz
    ```
 2. Run `fish` command in console.
 3. Enjoy.
@@ -35,7 +35,7 @@
 
 2. ```sh
    # Add this repo as a source to un-get
-   echo "https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/slackware-repo/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
+   echo "https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/slackware-repo/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
 
    # Update un-get sources
    un-get update
