@@ -23,8 +23,7 @@ while IFS= read -r -d '' file; do
 done < <(find . -type f -not -name "$LIST_FILE" -not -name "$CHECKSUMS_FILE" -not -name "*.tmp" -print0 2>/dev/null) >"$LIST_FILE.tmp"
 
 if [ -f "$LIST_FILE.tmp" ]; then
-    sort -k4 "$LIST_FILE.tmp" >"$LIST_FILE" 2>/dev/null || true
-    rm -f "$LIST_FILE.tmp"
+    mv "$LIST_FILE.tmp" "$LIST_FILE" 2>/dev/null || true
 fi
 
 find . -type f -not -name "$LIST_FILE" -not -name "$CHECKSUMS_FILE" -not -name "*.tmp" -exec md5sum {} \; >"$CHECKSUMS_FILE.tmp" 2>/dev/null || true
