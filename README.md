@@ -1,7 +1,3 @@
----
-This is an auto-generated file. Please edit README.md.template instead.
----
-
 # Fish-shell for Unraid - Slackware
 
 ## Fish package for Unraid (Slackware)
@@ -22,13 +18,19 @@ This is an auto-generated file. Please edit README.md.template instead.
 ### Method 1 - Manual install
 
 1. Copy the package file to your USB disk - `/boot/extra/` for auto-install on boot.
-   1. Quick install: `wget -O /boot/extra/fish-4.1.1-x86_64-1_da.txz https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/main//slackware/fish-4.1.1-x86_64-1_da.txz && installpkg /boot/extra/fish-4.1.1-x86_64-1_da.txz`
+   1. Quick install:
+   ```sh
+   wget -O /boot/extra/fish-4.1.1-x86_64-1_da.txz https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/slackware-repo/slackware/fish-4.1.1-x86_64-1_da.txz && installpkg /boot/extra/fish-4.1.1-x86_64-1_da.txz
+   ```
 2. Run `fish` command in console.
 3. Enjoy.
 
 ### Method 2 - Install via [un-get](https://github.com/ich777/un-get)
 
-2. Add `https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/main//slackware/ unraid-fish-shell` to `/boot/config/plugins/un-get/sources.list`
+2. Add `https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/slackware-repo/slackware/ unraid-fish-shell` to `/boot/config/plugins/un-get/sources.list`
+   ```sh
+   echo "https://raw.githubusercontent.com/deepfriedmind/unraid-fish-shell/slackware-repo/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
+   ```
 3. Run `un-get install fish`.
 4. Update using `un-get upgrade fish`.
 
