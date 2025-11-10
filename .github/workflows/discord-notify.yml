@@ -23,18 +23,28 @@ jobs:
           ACTION: ${{ github.event.action || '' }}
           ACTOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
-          PR_TITLE: ${{ github.event.pull_request.title || '' }}
-          ISSUE_TITLE: ${{ github.event.issue.title || '' }}
+          # Release info
           RELEASE_NAME: ${{ github.event.release.name || '' }}
           RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
+          # PR/Issue info
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          ISSUE_TITLE: ${{ github.event.issue.title || '' }}
+          # Workflow run info
           WORKFLOW_NAME: ${{ github.event.workflow_run.name || '' }}
           WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
           WORKFLOW_URL: ${{ github.event.workflow_run.html_url || '' }}
-          URL: ""   # fallback determined in bash
-          TITLE: "" # fallback determined in bash
-          BODY: ""  # fallback determined in bash
+          # Optional: get built version from build_fish.yml outputs (requires outputs set in that workflow)
+          BUILT_VERSION: ${{ github.event.workflow_run.outputs.release_tag || '' }}
         run: |
-          # Determine event-specific URL, title, body
+          # Initialize fields
+          URL=""
+          TITLE=""
+          BODY=""
+          CONTENT=""
+          COLOR=8421504
+          ICON="🧭"
+
+          # Determine event type
           case "$EVENT" in
             release)
               URL="${{ github.event.release.html_url }}"
@@ -84,6 +94,11 @@ jobs:
               URL="${WORKFLOW_URL:-https://github.com/${REPO}/actions}"
               TITLE="${WORKFLOW_NAME:-Workflow Run}"
               BODY="Workflow '${WORKFLOW_NAME}' completed with conclusion: ${WORKFLOW_CONCLUSION}"
+              # Add built version if available
+              if [ -n "$BUILT_VERSION" ]; then
+                BODY="$BODY\nBuilt Version: $BUILT_VERSION"
+                TITLE="$TITLE — $BUILT_VERSION"
+              fi
               if [ "$WORKFLOW_CONCLUSION" = "success" ]; then
                 COLOR=5763719
                 ICON="✅"
@@ -122,7 +137,9 @@ jobs:
                 "color": ${COLOR},
                 "fields": [
                   {"name": "Repository", "value": "${REPO}", "inline": true},
-                  {"name": "Actor", "value": "${ACTOR}", "inline": true}
+                  {"name": "Actor", "value": "${ACTOR}", "inline": true},
+                  {"name": "Release Tag", "value": "${RELEASE_TAG:-N/A}", "inline": true},
+                  {"name": "Release Name", "value": "${RELEASE_NAME:-N/A}", "inline": true}
                 ],
                 "timestamp": "${TIMESTAMP}"
               }
