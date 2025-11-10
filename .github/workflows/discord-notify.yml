@@ -16,6 +16,16 @@ jobs:
   notify_discord:
     runs-on: ubuntu-latest
     steps:
+      - name: Get latest release
+        id: latest_release
+        run: |
+          latest_tag=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest \
+            | jq -r .tag_name)
+          latest_name=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest \
+            | jq -r .name)
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+          echo "latest_name=$latest_name" >> $GITHUB_ENV
+
       - name: Send Discord Notification
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -23,6 +33,8 @@ jobs:
           ACTION: ${{ github.event.action || '' }}
           ACTOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
+          LATEST_RELEASE_TAG: ${{ env.latest_tag || 'N/A' }}
+          LATEST_RELEASE_NAME: ${{ env.latest_name || 'N/A' }}
           # Release info
           RELEASE_NAME: ${{ github.event.release.name || '' }}
           RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
@@ -43,8 +55,8 @@ jobs:
           BUILT_VERSION: ${{ github.event.workflow_run.outputs.release_tag || '' }}
         run: |
           # Fallback for release info
-          RELEASE_NAME="${RELEASE_NAME:-N/A}"
-          RELEASE_TAG="${RELEASE_TAG:-${BUILT_VERSION:-N/A}}"
+          RELEASE_NAME="${RELEASE_NAME:-${LATEST_RELEASE_NAME:-N/A}}"
+          RELEASE_TAG="${RELEASE_TAG:-${BUILT_VERSION:-${LATEST_RELEASE_NAME:-N/A}}}"
 
           # Initialize variables
           URL=""
