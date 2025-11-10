@@ -33,10 +33,13 @@ jobs:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name || '' }}
           WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
           WORKFLOW_URL: ${{ github.event.workflow_run.html_url || '' }}
-          # Optional: get built version from build_fish.yml outputs (requires outputs set in that workflow)
           BUILT_VERSION: ${{ github.event.workflow_run.outputs.release_tag || '' }}
         run: |
-          # Initialize fields
+          # Fallback for release info
+          RELEASE_NAME="${RELEASE_NAME:-N/A}"
+          RELEASE_TAG="${RELEASE_TAG:-${BUILT_VERSION:-N/A}}"
+
+          # Initialize variables
           URL=""
           TITLE=""
           BODY=""
@@ -94,8 +97,8 @@ jobs:
               URL="${WORKFLOW_URL:-https://github.com/${REPO}/actions}"
               TITLE="${WORKFLOW_NAME:-Workflow Run}"
               BODY="Workflow '${WORKFLOW_NAME}' completed with conclusion: ${WORKFLOW_CONCLUSION}"
-              # Add built version if available
-              if [ -n "$BUILT_VERSION" ]; then
+              # Append built version if available
+              if [ "$BUILT_VERSION" != "" ]; then
                 BODY="$BODY\nBuilt Version: $BUILT_VERSION"
                 TITLE="$TITLE — $BUILT_VERSION"
               fi
@@ -122,13 +125,12 @@ jobs:
           # Escape quotes and newlines
           TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g')
           BODY_ESC=$(echo "${BODY:-*(No content)*}" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           # Build JSON
           JSON=$(cat <<EOF
           {
-            "content": "${ICON} ${CONTENT}",
+            "content": "${ICON} ${CONTENT} — ${RELEASE_TAG} ${RELEASE_NAME}",
             "embeds": [
               {
                 "title": "${TITLE_ESC}",
@@ -138,8 +140,8 @@ jobs:
                 "fields": [
                   {"name": "Repository", "value": "${REPO}", "inline": true},
                   {"name": "Actor", "value": "${ACTOR}", "inline": true},
-                  {"name": "Release Tag", "value": "${RELEASE_TAG:-N/A}", "inline": true},
-                  {"name": "Release Name", "value": "${RELEASE_NAME:-N/A}", "inline": true}
+                  {"name": "Release Tag", "value": "${RELEASE_TAG}", "inline": true},
+                  {"name": "Release Name", "value": "${RELEASE_NAME}", "inline": true}
                 ],
                 "timestamp": "${TIMESTAMP}"
               }
