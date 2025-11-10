@@ -2,80 +2,115 @@ name: Universal Discord Notifier
 
 on:
   release:
-    types: [published, created, released]
-  issues:
-    types: [opened, closed, reopened]
+    types: [published, created]
   pull_request:
     types: [opened, closed, reopened]
+  issues:
+    types: [opened, closed, reopened]
+  workflow_run:
+    workflows: ["Auto Build & Release Fish Slackware Package"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
   notify_discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Discord notification
+      - name: Send Discord Notification
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           EVENT: ${{ github.event_name }}
-          ACTION: ${{ github.event.action }}
+          ACTION: ${{ github.event.action || '' }}
           ACTOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
-          URL: ${{ github.event.html_url || github.event.pull_request.html_url || github.event.issue.html_url || github.event.release.html_url }}
-          TITLE: ${{ github.event.pull_request.title || github.event.issue.title || github.event.release.name }}
-          BODY: ${{ github.event.pull_request.body || github.event.issue.body || github.event.release.body }}
-          TAG: ${{ github.event.release.tag_name }}
-          STATE: ${{ github.event.pull_request.merged }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          ISSUE_TITLE: ${{ github.event.issue.title || '' }}
+          RELEASE_NAME: ${{ github.event.release.name || '' }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name || '' }}
+          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
+          WORKFLOW_URL: ${{ github.event.workflow_run.html_url || '' }}
+          URL: ""   # fallback determined in bash
+          TITLE: "" # fallback determined in bash
+          BODY: ""  # fallback determined in bash
         run: |
-          COLOR=0
-          ICON=""
-          CONTENT=""
-          TITLE_ESC=$(echo "${TITLE:-No title}" | sed 's/"/\\"/g')
-          BODY_ESC=$(echo "${BODY:-}" | head -c 400 | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
-
+          # Determine event-specific URL, title, body
           case "$EVENT" in
             release)
-              COLOR=3447003 # blue
+              URL="${{ github.event.release.html_url }}"
+              TITLE="${RELEASE_NAME:-Release $RELEASE_TAG}"
+              BODY="${BODY:-}$(echo "${{ github.event.release.body }}" | head -c 300)"
+              COLOR=3447003
               ICON="🚀"
               CONTENT="**New Release Published**"
-              BODY_ESC="${BODY_ESC:-*(No changelog provided)*}"
-              ;;
-            issues)
-              if [ "$ACTION" = "opened" ]; then
-                COLOR=16776960 # yellow
-                ICON="🐞"
-                CONTENT="**New Issue Opened**"
-              elif [ "$ACTION" = "closed" ]; then
-                COLOR=10038562 # red
-                ICON="✅"
-                CONTENT="**Issue Closed**"
-              else
-                COLOR=9807270 # gray
-                ICON="🌀"
-                CONTENT="**Issue Reopened**"
-              fi
               ;;
             pull_request)
+              URL="${{ github.event.pull_request.html_url }}"
+              TITLE="${PR_TITLE:-Pull Request}"
+              BODY="$(echo "${{ github.event.pull_request.body }}" | head -c 300)"
               if [ "$ACTION" = "opened" ]; then
-                COLOR=5763719 # green
+                COLOR=5763719
                 ICON="🔀"
                 CONTENT="**Pull Request Opened**"
-              elif [ "$STATE" = "true" ]; then
-                COLOR=8311585 # purple
+              elif [ "$ACTION" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+                COLOR=8311585
                 ICON="🎉"
                 CONTENT="**Pull Request Merged!**"
               else
-                COLOR=10038562 # red
+                COLOR=10038562
                 ICON="❌"
                 CONTENT="**Pull Request Closed**"
               fi
               ;;
+            issues)
+              URL="${{ github.event.issue.html_url }}"
+              TITLE="${ISSUE_TITLE:-Issue}"
+              BODY="$(echo "${{ github.event.issue.body }}" | head -c 300)"
+              if [ "$ACTION" = "opened" ]; then
+                COLOR=16776960
+                ICON="🐞"
+                CONTENT="**New Issue Opened**"
+              elif [ "$ACTION" = "closed" ]; then
+                COLOR=10038562
+                ICON="✅"
+                CONTENT="**Issue Closed**"
+              else
+                COLOR=9807270
+                ICON="🌀"
+                CONTENT="**Issue Reopened**"
+              fi
+              ;;
+            workflow_run)
+              URL="${WORKFLOW_URL:-https://github.com/${REPO}/actions}"
+              TITLE="${WORKFLOW_NAME:-Workflow Run}"
+              BODY="Workflow '${WORKFLOW_NAME}' completed with conclusion: ${WORKFLOW_CONCLUSION}"
+              if [ "$WORKFLOW_CONCLUSION" = "success" ]; then
+                COLOR=5763719
+                ICON="✅"
+                CONTENT="**Workflow Succeeded**"
+              else
+                COLOR=10038562
+                ICON="❌"
+                CONTENT="**Workflow Failed**"
+              fi
+              ;;
             *)
-              COLOR=8421504 # gray
+              URL="https://github.com/${REPO}"
+              TITLE="Manual Trigger"
+              BODY="Workflow manually triggered by ${ACTOR}"
+              COLOR=8421504
               ICON="🧭"
               CONTENT="**Manual Trigger**"
               ;;
           esac
 
+          # Escape quotes and newlines
+          TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g')
+          BODY_ESC=$(echo "${BODY:-*(No content)*}" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Build JSON
           JSON=$(cat <<EOF
           {
             "content": "${ICON} ${CONTENT}",
@@ -86,14 +121,15 @@ jobs:
                 "description": "${BODY_ESC}",
                 "color": ${COLOR},
                 "fields": [
-                  { "name": "Repository", "value": "${REPO}", "inline": true },
-                  { "name": "Actor", "value": "${ACTOR}", "inline": true }
+                  {"name": "Repository", "value": "${REPO}", "inline": true},
+                  {"name": "Actor", "value": "${ACTOR}", "inline": true}
                 ],
-                "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+                "timestamp": "${TIMESTAMP}"
               }
             ]
           }
           EOF
           )
 
+          # Send to Discord
           curl -H "Content-Type: application/json" -d "$JSON" "$WEBHOOK"
