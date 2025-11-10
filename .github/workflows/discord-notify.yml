@@ -1,0 +1,99 @@
+name: Universal Discord Notifier
+
+on:
+  release:
+    types: [published, created, released]
+  issues:
+    types: [opened, closed, reopened]
+  pull_request:
+    types: [opened, closed, reopened]
+  workflow_dispatch:
+
+jobs:
+  notify_discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord notification
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          EVENT: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          URL: ${{ github.event.html_url || github.event.pull_request.html_url || github.event.issue.html_url || github.event.release.html_url }}
+          TITLE: ${{ github.event.pull_request.title || github.event.issue.title || github.event.release.name }}
+          BODY: ${{ github.event.pull_request.body || github.event.issue.body || github.event.release.body }}
+          TAG: ${{ github.event.release.tag_name }}
+          STATE: ${{ github.event.pull_request.merged }}
+        run: |
+          COLOR=0
+          ICON=""
+          CONTENT=""
+          TITLE_ESC=$(echo "${TITLE:-No title}" | sed 's/"/\\"/g')
+          BODY_ESC=$(echo "${BODY:-}" | head -c 400 | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+
+          case "$EVENT" in
+            release)
+              COLOR=3447003 # blue
+              ICON="🚀"
+              CONTENT="**New Release Published**"
+              BODY_ESC="${BODY_ESC:-*(No changelog provided)*}"
+              ;;
+            issues)
+              if [ "$ACTION" = "opened" ]; then
+                COLOR=16776960 # yellow
+                ICON="🐞"
+                CONTENT="**New Issue Opened**"
+              elif [ "$ACTION" = "closed" ]; then
+                COLOR=10038562 # red
+                ICON="✅"
+                CONTENT="**Issue Closed**"
+              else
+                COLOR=9807270 # gray
+                ICON="🌀"
+                CONTENT="**Issue Reopened**"
+              fi
+              ;;
+            pull_request)
+              if [ "$ACTION" = "opened" ]; then
+                COLOR=5763719 # green
+                ICON="🔀"
+                CONTENT="**Pull Request Opened**"
+              elif [ "$STATE" = "true" ]; then
+                COLOR=8311585 # purple
+                ICON="🎉"
+                CONTENT="**Pull Request Merged!**"
+              else
+                COLOR=10038562 # red
+                ICON="❌"
+                CONTENT="**Pull Request Closed**"
+              fi
+              ;;
+            *)
+              COLOR=8421504 # gray
+              ICON="🧭"
+              CONTENT="**Manual Trigger**"
+              ;;
+          esac
+
+          JSON=$(cat <<EOF
+          {
+            "content": "${ICON} ${CONTENT}",
+            "embeds": [
+              {
+                "title": "${TITLE_ESC}",
+                "url": "${URL}",
+                "description": "${BODY_ESC}",
+                "color": ${COLOR},
+                "fields": [
+                  { "name": "Repository", "value": "${REPO}", "inline": true },
+                  { "name": "Actor", "value": "${ACTOR}", "inline": true }
+                ],
+                "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -H "Content-Type: application/json" -d "$JSON" "$WEBHOOK"
