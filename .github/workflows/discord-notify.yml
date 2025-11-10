@@ -26,9 +26,16 @@ jobs:
           # Release info
           RELEASE_NAME: ${{ github.event.release.name || '' }}
           RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
+          RELEASE_URL: ${{ github.event.release.html_url || '' }}
+          RELEASE_BODY: ${{ github.event.release.body || '' }}
           # PR/Issue info
           PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          PR_URL: ${{ github.event.pull_request.html_url || '' }}
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
+          PR_MERGED: ${{ github.event.pull_request.merged || '' }}
           ISSUE_TITLE: ${{ github.event.issue.title || '' }}
+          ISSUE_URL: ${{ github.event.issue.html_url || '' }}
+          ISSUE_BODY: ${{ github.event.issue.body || '' }}          
           # Workflow run info
           WORKFLOW_NAME: ${{ github.event.workflow_run.name || '' }}
           WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
@@ -50,22 +57,22 @@ jobs:
           # Determine event type
           case "$EVENT" in
             release)
-              URL="${{ github.event.release.html_url }}"
+              URL="${RELEASE_URL}"
               TITLE="${RELEASE_NAME:-Release $RELEASE_TAG}"
-              BODY="${BODY:-}$(echo "${{ github.event.release.body }}" | head -c 300)"
+              BODY="${BODY:-}$(echo "${RELEASE_BODY}" | head -c 300)"
               COLOR=3447003
               ICON="🚀"
               CONTENT="**New Release Published**"
               ;;
             pull_request)
-              URL="${{ github.event.pull_request.html_url }}"
+              URL="${PR_URL}"
               TITLE="${PR_TITLE:-Pull Request}"
-              BODY="$(echo "${{ github.event.pull_request.body }}" | head -c 300)"
+              BODY="$(echo "${PR_BODY}" | head -c 300)"
               if [ "$ACTION" = "opened" ]; then
                 COLOR=5763719
                 ICON="🔀"
                 CONTENT="**Pull Request Opened**"
-              elif [ "$ACTION" = "closed" ] && [ "${{ github.event.pull_request.merged }}" = "true" ]; then
+              elif [ "$ACTION" = "closed" ] && [ "${PR_MERGED}" = "true" ]; then
                 COLOR=8311585
                 ICON="🎉"
                 CONTENT="**Pull Request Merged!**"
@@ -76,9 +83,9 @@ jobs:
               fi
               ;;
             issues)
-              URL="${{ github.event.issue.html_url }}"
+              URL="${ISSUE_URL}"
               TITLE="${ISSUE_TITLE:-Issue}"
-              BODY="$(echo "${{ github.event.issue.body }}" | head -c 300)"
+              BODY="$(echo "${ISSUE_BODY}" | head -c 300)"
               if [ "$ACTION" = "opened" ]; then
                 COLOR=16776960
                 ICON="🐞"
@@ -130,7 +137,7 @@ jobs:
           # Build JSON
           JSON=$(cat <<EOF
           {
-            "content": "${ICON} ${CONTENT} — ${RELEASE_TAG} ${RELEASE_NAME}",
+            "content": "${ICON} ${CONTENT}$([ "$EVENT" = "release" ] && echo " — ${RELEASE_TAG} ${RELEASE_NAME}" || echo "")",
             "embeds": [
               {
                 "title": "${TITLE_ESC}",
