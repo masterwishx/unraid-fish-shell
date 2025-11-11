@@ -153,6 +153,24 @@ jobs:
           BODY_ESC=$(echo "${BODY:-(No content)}" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+          # Escape variables
+          ACTOR_ESC=$(echo "$ACTOR" | sed 's/"/\\"/g')
+          RELEASE_TAG_ESC=$(echo "$RELEASE_TAG" | sed 's/"/\\"/g')
+          RELEASE_NAME_ESC=$(echo "$RELEASE_NAME" | sed 's/"/\\"/g')
+          REPO_ESC=$(echo "$REPO" | sed 's/"/\\"/g')
+
+          # Build fields array conditionally
+          FIELDS="["
+          FIELDS+="{\"name\": \"Repository\", \"value\": \"${REPO_ESC}\", \"inline\": true},"
+          FIELDS+="{\"name\": \"Actor\", \"value\": \"${ACTOR_ESC}\", \"inline\": true}"
+
+          if [ "$EVENT" = "release" ]; then
+            FIELDS+=",{\"name\": \"Release Tag\", \"value\": \"${RELEASE_TAG_ESC}\", \"inline\": true}"
+            FIELDS+=",{\"name\": \"Release Name\", \"value\": \"${RELEASE_NAME_ESC}\", \"inline\": true}"
+          fi
+
+          FIELDS+="]"
+
           # Build JSON
           JSON=$(cat <<EOF
           {
@@ -163,12 +181,7 @@ jobs:
                 "url": "${URL}",
                 "description": "${BODY_ESC}",
                 "color": ${COLOR},
-                "fields": [
-                  {"name": "Repository", "value": "${REPO}", "inline": true},
-                  {"name": "Actor", "value": "${ACTOR}", "inline": true},
-                  {"name": "Release Tag", "value": "${RELEASE_TAG}", "inline": true},
-                  {"name": "Release Name", "value": "${RELEASE_NAME}", "inline": true}
-                ],
+                "fields": ${FIELDS},
                 "timestamp": "${TIMESTAMP}"
               }
             ]
