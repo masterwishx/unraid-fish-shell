@@ -28,6 +28,8 @@ jobs:
           name: release_info
           path: .
           run-id: ${{ github.event.workflow_run.id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 2: Read release info
       - name: Read release info
