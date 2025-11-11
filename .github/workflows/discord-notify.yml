@@ -22,16 +22,16 @@ jobs:
 
       # Step 1: Download release info artifact (from build-fish)
       - name: Download release info artifact
-        # if: ${{ github.event_name == 'workflow_run' }}
+        
         uses: actions/download-artifact@v4
         with:
           name: release_info
           path: .
-          # run-id: ${{ github.event.workflow_run.id }}
+          
 
       # Step 2: Read release info
       - name: Read release info
-        # if: ${{ github.event_name == 'workflow_run' }}
+        
         id: read_release
         run: |
           RELEASE_TAG=$(jq -r '.release_tag' release_info.json)
@@ -41,7 +41,7 @@ jobs:
 
       # Step 3: Send Discord notification
       - name: Send Discord Notification
-        # if: ${{ !(github.event_name == 'workflow_run' && env.NEW_RELEASE != 'true' && github.event.workflow_run.conclusion == 'success') }}
+        
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           EVENT: ${{ github.event_name }}
