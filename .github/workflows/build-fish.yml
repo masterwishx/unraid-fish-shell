@@ -123,5 +123,20 @@ jobs:
             - Installation instructions in README.md.
           draft: false # <--- publish immediately
           files: ${{ env.pkg_file }}
+
+      - name: Generate release info
+        run: |
+          if [ "${{ env.skip_build }}" = "false" ]; then
+            echo "{\"release_tag\": \"v${{ env.latest_version }}\", \"new_release\": true}" > release_info.json
+          else
+            echo "{\"release_tag\": \"\", \"new_release\": false}" > release_info.json
+          fi
+
+      - name: Upload release info artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release_info
+          path: release_info.json
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
