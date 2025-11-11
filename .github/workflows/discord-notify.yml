@@ -23,27 +23,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release_info
-          path: ./release_info.json
+          path: .
 
       # Step 2: Read release info
       - name: Read release info
         if: ${{ github.event_name == 'workflow_run' }}
         id: read_release
         run: |
-          RELEASE_TAG=$(jq -r '.release_tag' ./release_info.json)
-          NEW_RELEASE=$(jq -r '.new_release' ./release_info.json)
+          RELEASE_TAG=$(jq -r '.release_tag' release_info.json)
+          NEW_RELEASE=$(jq -r '.new_release' release_info.json)
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
           echo "NEW_RELEASE=$NEW_RELEASE" >> $GITHUB_ENV
 
-      # Step 3: Exit if workflow_run succeeded but no new release
-      - name: Skip Discord if no new release
-        if: ${{ github.event_name == 'workflow_run' && env.NEW_RELEASE != 'true' && github.event.workflow_run.conclusion == 'success' }}
-        run: |
-          echo "✅ Workflow succeeded but no new release — skipping Discord notification."
-          exit 0
-
-      # Step 4: Send Discord notification
+      # Step 3: Send Discord notification
       - name: Send Discord Notification
+        if: ${{ !(github.event_name == 'workflow_run' && env.NEW_RELEASE != 'true' && github.event.workflow_run.conclusion == 'success') }}
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           EVENT: ${{ github.event_name }}
