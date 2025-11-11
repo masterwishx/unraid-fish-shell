@@ -16,16 +16,33 @@ jobs:
   notify_discord:
     runs-on: ubuntu-latest
     steps:
-      - name: Get latest release
-        id: latest_release
-        run: |
-          latest_tag=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name // empty' 2>/dev/null || echo "N/A")
-          latest_name=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.name // empty' 2>/dev/null || echo "N/A")
-          latest_tag="${latest_tag:-N/A}"
-          latest_name="${latest_name:-N/A}"
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
-          echo "latest_name=$latest_name" >> $GITHUB_ENV
 
+      # Step 1: Download release info artifact (from build-fish)
+      - name: Download release info artifact
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/download-artifact@v3
+        with:
+          name: release_info
+          path: ./release_info.json
+
+      # Step 2: Read release info
+      - name: Read release info
+        if: ${{ github.event_name == 'workflow_run' }}
+        id: read_release
+        run: |
+          RELEASE_TAG=$(jq -r '.release_tag' ./release_info.json)
+          NEW_RELEASE=$(jq -r '.new_release' ./release_info.json)
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "NEW_RELEASE=$NEW_RELEASE" >> $GITHUB_ENV
+
+      # Step 3: Exit if workflow_run succeeded but no new release
+      - name: Skip Discord if no new release
+        if: ${{ github.event_name == 'workflow_run' && env.NEW_RELEASE != 'true' && github.event.workflow_run.conclusion == 'success' }}
+        run: |
+          echo "✅ Workflow succeeded but no new release — skipping Discord notification."
+          exit 0
+
+      # Step 4: Send Discord notification
       - name: Send Discord Notification
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -33,13 +50,13 @@ jobs:
           ACTION: ${{ github.event.action || '' }}
           ACTOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
-          LATEST_RELEASE_NAME: ${{ env.latest_name || 'N/A' }}
-          LATEST_RELEASE_TAG: ${{ env.latest_tag || 'N/A' }}
           # Release info
-          RELEASE_NAME: ${{ github.event.release.name || '' }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
           RELEASE_URL: ${{ github.event.release.html_url || '' }}
           RELEASE_BODY: ${{ github.event.release.body || '' }}
+          RELEASE_TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || env.RELEASE_TAG || '' }}
+          RELEASE_NAME: ${{ github.event_name == 'release' && github.event.release.name || env.RELEASE_NAME || '' }}
+          NEW_RELEASE: ${{ github.event_name == 'release' && 'true' || env.NEW_RELEASE || 'false' }}
+
           # PR/Issue info
           PR_TITLE: ${{ github.event.pull_request.title || '' }}
           PR_URL: ${{ github.event.pull_request.html_url || '' }}
@@ -52,14 +69,8 @@ jobs:
           WORKFLOW_NAME: ${{ github.event.workflow_run.name || '' }}
           WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
           WORKFLOW_URL: ${{ github.event.workflow_run.html_url || '' }}
-          BUILT_VERSION: ${{ github.event.workflow_run.outputs.release_tag || '' }}
-          NEW_RELEASE: ${{ github.event.workflow_run.outputs.new_release || '' }}
         run: |
-          # Fallback for release info
-          RELEASE_NAME="${RELEASE_NAME:-${LATEST_RELEASE_NAME:-N/A}}"
-          RELEASE_TAG="${RELEASE_TAG:-${BUILT_VERSION:-${LATEST_RELEASE_TAG:-N/A}}}"
-
-          # Initialize variables
+          # Determine event type and set Discord embed variables
           URL=""
           TITLE=""
           BODY=""
@@ -67,12 +78,11 @@ jobs:
           COLOR=8421504
           ICON="🧭"
 
-          # Determine event type
           case "$EVENT" in
             release)
               URL="${RELEASE_URL}"
               TITLE="${RELEASE_NAME:-Release $RELEASE_TAG}"
-              BODY="${BODY:-}$(echo "${RELEASE_BODY}" | head -c 300)"
+              BODY="$(echo "${RELEASE_BODY}" | head -c 300)"
               COLOR=3447003
               ICON="🚀"
               CONTENT="**New Release Published**"
@@ -85,7 +95,7 @@ jobs:
                 COLOR=5763719
                 ICON="🔀"
                 CONTENT="**Pull Request Opened**"
-              elif [ "$ACTION" = "closed" ] && [ "${PR_MERGED}" = "true" ]; then
+              elif [ "$ACTION" = "closed" ] && [ "$PR_MERGED" = "true" ]; then
                 COLOR=8311585
                 ICON="🎉"
                 CONTENT="**Pull Request Merged!**"
@@ -117,16 +127,19 @@ jobs:
               URL="${WORKFLOW_URL:-https://github.com/${REPO}/actions}"
               TITLE="${WORKFLOW_NAME:-Workflow Run}"
               BODY="Workflow '${WORKFLOW_NAME}' completed with conclusion: ${WORKFLOW_CONCLUSION}"
-              # Append built version if available
-              if [ "$BUILT_VERSION" != "" ]; then
-                BODY="$BODY"$'\n'"Built Version: $BUILT_VERSION"
-                TITLE="$TITLE — $BUILT_VERSION"
-              fi
-              if [ "$WORKFLOW_CONCLUSION" = "success" ]; then
+              # Append release info if available
+              if [ "${RELEASE_TAG}" != "" ] && [ "${NEW_RELEASE}" = "true" ]; then
+                BODY="$BODY"$'\n'"Built Version: $RELEASE_TAG"
+                TITLE="$TITLE — $RELEASE_TAG"
+                CONTENT="**Workflow Succeeded — New Release**"
+                COLOR=5763719
+                ICON="✅"
+              else
                 COLOR=5763719
                 ICON="✅"
                 CONTENT="**Workflow Succeeded**"
-              else
+              fi
+              if [ "$WORKFLOW_CONCLUSION" != "success" ]; then
                 COLOR=10038562
                 ICON="❌"
                 CONTENT="**Workflow Failed**"
@@ -142,39 +155,30 @@ jobs:
               ;;
           esac
 
-          # ✅ Skip notification if no release built
-          if [ "$EVENT" = "workflow_run" ] && [ "$WORKFLOW_CONCLUSION" = "success" ] && [ -z "$BUILT_VERSION" ]; then
-            echo "✅ Workflow succeeded but no new release — skipping Discord notification."
-            exit 0
-          fi
-
-          # Escape quotes and newlines
+          # Escape variables
           TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g')
           BODY_ESC=$(echo "${BODY:-(No content)}" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Escape variables
+          # Build conditional fields
           ACTOR_ESC=$(echo "$ACTOR" | sed 's/"/\\"/g')
           RELEASE_TAG_ESC=$(echo "$RELEASE_TAG" | sed 's/"/\\"/g')
           RELEASE_NAME_ESC=$(echo "$RELEASE_NAME" | sed 's/"/\\"/g')
           REPO_ESC=$(echo "$REPO" | sed 's/"/\\"/g')
 
-          # Build fields array conditionally
           FIELDS="["
           FIELDS+="{\"name\": \"Repository\", \"value\": \"${REPO_ESC}\", \"inline\": true},"
           FIELDS+="{\"name\": \"Actor\", \"value\": \"${ACTOR_ESC}\", \"inline\": true}"
-
-          if [ "$EVENT" = "release" ]; then
+          if [ "$EVENT" = "release" ] || ([ "$EVENT" = "workflow_run" ] && [ "$NEW_RELEASE" = "true" ]); then
             FIELDS+=",{\"name\": \"Release Tag\", \"value\": \"${RELEASE_TAG_ESC}\", \"inline\": true}"
             FIELDS+=",{\"name\": \"Release Name\", \"value\": \"${RELEASE_NAME_ESC}\", \"inline\": true}"
           fi
-
           FIELDS+="]"
 
           # Build JSON
           JSON=$(cat <<EOF
           {
-            "content": "${ICON} ${CONTENT}$([ "$EVENT" = "release" ] && echo " — ${RELEASE_TAG} ${RELEASE_NAME}" || echo "")",
+            "content": "${ICON} ${CONTENT}",
             "embeds": [
               {
                 "title": "${TITLE_ESC}",

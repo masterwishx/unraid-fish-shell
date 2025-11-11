@@ -46,12 +46,9 @@ jobs:
           if git rev-parse "v${{ env.latest_version }}" >/dev/null 2>&1; then
            echo "Version ${{ env.latest_version }} already built. Skipping."
            echo "skip_build=true" >> $GITHUB_ENV
-           echo "new_release=false" >> $GITHUB_OUTPUT
            exit 0
           else
-           echo "skip_build=false" >> $GITHUB_ENV
-           echo "new_release=true" >> $GITHUB_OUTPUT
-           echo "release_tag=v${{ env.latest_version }}" >> $GITHUB_OUTPUT
+           echo "skip_build=false" >> $GITHUB_ENV           
           fi
 
       - name: Download fish tarball
@@ -126,5 +123,28 @@ jobs:
             - Installation instructions in README.md.
           draft: false # <--- publish immediately
           files: ${{ env.pkg_file }}
+
+      - name: Upload release info (new release)
+        if: env.skip_build == 'false'
+        run: |
+          echo "{\"release_tag\": \"v${{ env.latest_version }}\", \"new_release\": true}" > release_info.json
+      - name: Upload release info artifact
+        if: env.skip_build == 'false'
+        uses: actions/upload-artifact@v3
+        with:
+          name: release_info
+          path: release_info.json
+
+      - name: Upload release info (skipped)
+        if: env.skip_build == 'true'
+        run: |
+          echo "{\"release_tag\": \"\", \"new_release\": false}" > release_info.json
+      - name: Upload release info artifact
+        if: env.skip_build == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: release_info
+          path: release_info.json    
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
