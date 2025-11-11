@@ -12,6 +12,9 @@ on:
     types: [completed]
   workflow_dispatch:
 
+permissions:
+  actions: read
+
 jobs:
   notify_discord:
     runs-on: ubuntu-latest
@@ -24,6 +27,7 @@ jobs:
         with:
           name: release_info
           path: .
+          run-id: ${{ github.event.workflow_run.id }}
 
       # Step 2: Read release info
       - name: Read release info
