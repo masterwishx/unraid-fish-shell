@@ -19,10 +19,10 @@ jobs:
       - name: Get latest release
         id: latest_release
         run: |
-          latest_tag=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest \
-            | jq -r .tag_name)
-          latest_name=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest \
-            | jq -r .name)
+          latest_tag=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name // empty' 2>/dev/null || echo "N/A")
+          latest_name=$(curl -s https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.name // empty' 2>/dev/null || echo "N/A")
+          latest_tag="${latest_tag:-N/A}"
+          latest_name="${latest_name:-N/A}"
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
           echo "latest_name=$latest_name" >> $GITHUB_ENV
 
@@ -34,7 +34,7 @@ jobs:
           ACTOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           LATEST_RELEASE_NAME: ${{ env.latest_name || 'N/A' }}
-          LATEST_RELEASE_TAG: ${{ env.latest_tag || 'N/A' }}          
+          LATEST_RELEASE_TAG: ${{ env.latest_tag || 'N/A' }}
           # Release info
           RELEASE_NAME: ${{ github.event.release.name || '' }}
           RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
@@ -47,12 +47,13 @@ jobs:
           PR_MERGED: ${{ github.event.pull_request.merged || '' }}
           ISSUE_TITLE: ${{ github.event.issue.title || '' }}
           ISSUE_URL: ${{ github.event.issue.html_url || '' }}
-          ISSUE_BODY: ${{ github.event.issue.body || '' }}          
+          ISSUE_BODY: ${{ github.event.issue.body || '' }}
           # Workflow run info
           WORKFLOW_NAME: ${{ github.event.workflow_run.name || '' }}
           WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
           WORKFLOW_URL: ${{ github.event.workflow_run.html_url || '' }}
           BUILT_VERSION: ${{ github.event.workflow_run.outputs.release_tag || '' }}
+          NEW_RELEASE: ${{ github.event.workflow_run.outputs.new_release || '' }}
         run: |
           # Fallback for release info
           RELEASE_NAME="${RELEASE_NAME:-${LATEST_RELEASE_NAME:-N/A}}"
@@ -118,7 +119,7 @@ jobs:
               BODY="Workflow '${WORKFLOW_NAME}' completed with conclusion: ${WORKFLOW_CONCLUSION}"
               # Append built version if available
               if [ "$BUILT_VERSION" != "" ]; then
-                BODY="$BODY\nBuilt Version: $BUILT_VERSION"
+                BODY="$BODY"$'\n'"Built Version: $BUILT_VERSION"
                 TITLE="$TITLE — $BUILT_VERSION"
               fi
               if [ "$WORKFLOW_CONCLUSION" = "success" ]; then
@@ -141,9 +142,15 @@ jobs:
               ;;
           esac
 
+          # ✅ Skip notification if no release built
+          if [ "$EVENT" = "workflow_run" ] && [ "$WORKFLOW_CONCLUSION" = "success" ] && [ -z "$BUILT_VERSION" ]; then
+            echo "✅ Workflow succeeded but no new release — skipping Discord notification."
+            exit 0
+          fi
+
           # Escape quotes and newlines
           TITLE_ESC=$(echo "$TITLE" | sed 's/"/\\"/g')
-          BODY_ESC=$(echo "${BODY:-*(No content)*}" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+          BODY_ESC=$(echo "${BODY:-(No content)}" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           # Build JSON

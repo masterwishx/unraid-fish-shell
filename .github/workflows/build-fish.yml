@@ -46,9 +46,12 @@ jobs:
           if git rev-parse "v${{ env.latest_version }}" >/dev/null 2>&1; then
            echo "Version ${{ env.latest_version }} already built. Skipping."
            echo "skip_build=true" >> $GITHUB_ENV
+           echo "new_release=false" >> $GITHUB_OUTPUT
            exit 0
           else
            echo "skip_build=false" >> $GITHUB_ENV
+           echo "new_release=true" >> $GITHUB_OUTPUT
+           echo "release_tag=v${{ env.latest_version }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Download fish tarball
