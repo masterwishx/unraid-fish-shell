@@ -138,6 +138,3 @@ jobs:
         with:
           name: release_info
           path: release_info.json
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
