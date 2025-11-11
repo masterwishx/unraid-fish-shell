@@ -20,7 +20,7 @@ jobs:
       # Step 1: Download release info artifact (from build-fish)
       - name: Download release info artifact
         if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: release_info
           path: ./release_info.json

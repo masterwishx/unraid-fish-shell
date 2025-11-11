@@ -130,7 +130,7 @@ jobs:
           echo "{\"release_tag\": \"v${{ env.latest_version }}\", \"new_release\": true}" > release_info.json
       - name: Upload release info artifact
         if: env.skip_build == 'false'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release_info
           path: release_info.json
@@ -141,7 +141,7 @@ jobs:
           echo "{\"release_tag\": \"\", \"new_release\": false}" > release_info.json
       - name: Upload release info artifact
         if: env.skip_build == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release_info
           path: release_info.json    
