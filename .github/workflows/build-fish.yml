@@ -48,7 +48,7 @@ jobs:
            echo "skip_build=true" >> $GITHUB_ENV
            exit 0
           else
-           echo "skip_build=false" >> $GITHUB_ENV           
+           echo "skip_build=false" >> $GITHUB_ENV
           fi
 
       - name: Download fish tarball
