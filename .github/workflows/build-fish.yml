@@ -130,6 +130,7 @@ jobs:
             echo "{\"release_tag\": \"v${{ env.latest_version }}\", \"new_release\": true}" > release_info.json
           else
             echo "{\"release_tag\": \"\", \"new_release\": false}" > release_info.json
+          fi
 
       - name: Upload release info artifact
         uses: actions/upload-artifact@v4
