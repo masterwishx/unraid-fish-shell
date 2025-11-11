@@ -19,15 +19,14 @@ jobs:
   notify_discord:
     runs-on: ubuntu-latest
     steps:
-
       # Step 1: Download release info artifact (from build-fish)
       - name: Download release info artifact
         if: ${{ github.event_name == 'workflow_run' }}
         uses: actions/download-artifact@v4
         with:
-          name: release_info          
+          name: release_info
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}        
+          run-id: ${{ github.event.workflow_run.id }}
 
       # Step 2: Read release info
       - name: Read release info
