@@ -21,7 +21,7 @@
    Quick install without reboot needed:
 
    ```sh
-   wget -O /boot/extra/fish-4.1.1-x86_64-1_da.txz https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/slackware-repo/slackware/fish-4.1.1-x86_64-1_da.txz && installpkg /boot/extra/fish-4.1.1-x86_64-1_da.txz
+   wget -O /boot/extra/{{PKG_FILE}} {{REPO_URL}}/slackware/{{PKG_FILE}} && installpkg /boot/extra/{{PKG_FILE}}
    ```
 
 2. Run `fish` command in console.
@@ -39,7 +39,7 @@
 
 ```sh
    # Add this repo as a source to un-get
-   echo "https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/slackware-repo/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
+   echo "{{REPO_URL}}/slackware/ unraid-fish-shell" >> /boot/config/plugins/un-get/sources.list
 
    # Update un-get sources
    un-get update
