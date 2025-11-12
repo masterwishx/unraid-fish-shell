@@ -3,7 +3,7 @@ name: Auto Build & Release Fish Slackware Package
 on:
   schedule:
     # - cron: "0 4 * * *" # daily at 04:00 UTC
-    - cron: "30 9 * * *" # daily at 04:00 UTC
+    - cron: "30 10 * * *" # daily at 04:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # needed to see all tags
 
@@ -90,7 +90,9 @@ jobs:
 
       - name: Generate repository metadata files
         if: env.skip_build == 'false'
-        run: ./.github/scripts/generate-repo-files.sh
+        run: |
+          chmod +x .github/scripts/*.sh
+          ./.github/scripts/generate-repo-files.sh
 
       - name: Commit repository files
         if: env.skip_build == 'false'
@@ -156,7 +158,7 @@ jobs:
           fi
 
       - name: Upload release info artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release_info
           path: release_info.json
