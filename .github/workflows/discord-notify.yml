@@ -21,7 +21,7 @@ jobs:
     steps:
       # Step 1: Download release info artifact (from build-fish)
       - name: Download release info artifact
-        if: ${{ github.event_name == 'workflow_run' }}
+        
         continue-on-error: true
         uses: actions/download-artifact@v5
         with:
@@ -31,7 +31,7 @@ jobs:
 
       # Step 2: Read release info
       - name: Read release info
-        if: ${{ github.event_name == 'workflow_run' }}
+        
         id: read_release
         continue-on-error: true
         run: |
