@@ -115,7 +115,7 @@ jobs:
       - name: Generate README from template
         if: env.skip_build == 'false'
         run: |
-          cp -f README.md.template README.md
+          cp -f tmp/README.md.template README.md
           sed -i "s|{{PKG_FILE}}|${{ env.pkg_file }}|g" README.md
           sed -i "s|{{UPSTREAM_FILE}}|${{ env.latest_file }}|g" README.md
           sed -i "s|{{REPO_URL}}|https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}|g" README.md
