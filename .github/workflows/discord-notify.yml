@@ -48,7 +48,7 @@ jobs:
 
       # Step 3: Send Discord notification
       - name: Send Discord Notification
-        if: ${{ !(github.event_name == 'workflow_run' && env.NEW_RELEASE != 'true' && github.event.workflow_run.conclusion == 'success') }}
+        
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           EVENT: ${{ github.event_name }}
