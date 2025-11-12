@@ -2,8 +2,7 @@ name: Auto Build & Release Fish Slackware Package
 
 on:
   schedule:
-    # - cron: "0 4 * * *" # daily at 04:00 UTC
-    - cron: "30 10 * * *" # daily at 04:00 UTC
+    - cron: "0 4 * * *" # daily at 04:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -152,9 +151,9 @@ jobs:
       - name: Generate release info
         run: |
           if [ "${{ env.skip_build }}" = "false" ]; then
-            echo "{\"release_tag\": \"v${{ env.latest_version }}\", \"new_release\": true}" > release_info.json
+            echo "{\"release_tag\": \"v${{ env.latest_version }}\", \"release_name\": \"Fish ${{ env.latest_version }} Slackware Package\", \"new_release\": true}" > release_info.json
           else
-            echo "{\"release_tag\": \"\", \"new_release\": false}" > release_info.json
+            echo "{\"release_tag\": \"\", \"release_name\": \"\", \"new_release\": false}" > release_info.json
           fi
 
       - name: Upload release info artifact

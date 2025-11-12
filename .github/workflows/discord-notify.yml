@@ -22,6 +22,7 @@ jobs:
       # Step 1: Download release info artifact (from build-fish)
       - name: Download release info artifact
         if: ${{ github.event_name == 'workflow_run' }}
+        continue-on-error: true
         uses: actions/download-artifact@v5
         with:
           name: release_info
@@ -32,11 +33,18 @@ jobs:
       - name: Read release info
         if: ${{ github.event_name == 'workflow_run' }}
         id: read_release
+        continue-on-error: true
         run: |
-          RELEASE_TAG=$(jq -r '.release_tag' release_info.json)
-          NEW_RELEASE=$(jq -r '.new_release' release_info.json)
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
-          echo "NEW_RELEASE=$NEW_RELEASE" >> $GITHUB_ENV
+          if [ -f release_info.json ]; then
+            RELEASE_TAG=$(jq -r '.release_tag' release_info.json)
+            RELEASE_NAME=$(jq -r '.release_name' release_info.json)
+            NEW_RELEASE=$(jq -r '.new_release' release_info.json)
+            echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+            echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+            echo "NEW_RELEASE=$NEW_RELEASE" >> $GITHUB_ENV
+          else
+            echo "No release_info.json found, skipping"
+          fi
 
       # Step 3: Send Discord notification
       - name: Send Discord Notification
