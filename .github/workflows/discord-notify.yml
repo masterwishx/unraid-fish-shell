@@ -34,8 +34,10 @@ jobs:
         id: read_release
         run: |
           RELEASE_TAG=$(jq -r '.release_tag' release_info.json)
+          RELEASE_NAME=$(jq -r '.release_name' release_info.json)
           NEW_RELEASE=$(jq -r '.new_release' release_info.json)
           echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
           echo "NEW_RELEASE=$NEW_RELEASE" >> $GITHUB_ENV
 
       # Step 3: Send Discord notification
