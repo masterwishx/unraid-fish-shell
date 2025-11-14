@@ -120,6 +120,8 @@ jobs:
           git add README.md
           git commit -m "Update README for release v${{ env.latest_version }}" || echo "No changes to commit"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit & push tag
         if: env.skip_build == 'false'
