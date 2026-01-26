@@ -48,7 +48,7 @@
    un-get install fish
 
    # Upgrade fish in the future
-   un-get update && un-get upgrade fish
+   un-get update && un-get upgrade
    ```
 
 ### Optional: Change the default shell to fish
