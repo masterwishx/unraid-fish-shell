@@ -3,8 +3,8 @@
 ## Fish package for Unraid (Slackware)
 
 - This release includes:
-  - Slackware package: **fish-4.3.3-x86_64-1_da.txz**
-  - Built from upstream fish release: **fish-4.3.3-linux-x86_64.tar.xz**
+  - Slackware package: **fish-4.4.0-x86_64-1_da.txz**
+  - Built from upstream fish release: **fish-4.4.0-linux-x86_64.tar.xz**
   - Contains a single standalone `fish` binary for any Linux.
   - Packaged for Unraid.
   - Installation instructions in README.md.
@@ -21,7 +21,7 @@
    Quick install without reboot needed:
 
    ```sh
-   wget -O /boot/extra/fish-4.3.3-x86_64-1_da.txz https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/main/slackware/fish-4.3.3-x86_64-1_da.txz && installpkg /boot/extra/fish-4.3.3-x86_64-1_da.txz
+   wget -O /boot/extra/fish-4.4.0-x86_64-1_da.txz https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/main/slackware/fish-4.4.0-x86_64-1_da.txz && installpkg /boot/extra/fish-4.4.0-x86_64-1_da.txz
    ```
 
 2. Run `fish` command in console.
@@ -48,7 +48,7 @@
    un-get install fish
 
    # Upgrade fish in the future
-   un-get update && un-get upgrade fish
+   un-get update && un-get upgrade
    ```
 
 ### Optional: Change the default shell to fish
