@@ -21,7 +21,7 @@
    Quick install without reboot needed:
 
    ```sh
-   wget -O /boot/extra/{{PKG_FILE}} {{REPO_URL}}/slackware/{{PKG_FILE}} && installpkg /boot/extra/{{PKG_FILE}}
+   wget -O /boot/extra/{{PKG_FILE}} {{REPO_URL}}/slackware/fish/{{PKG_FILE}} && installpkg /boot/extra/{{PKG_FILE}}
    ```
 
 2. Run `fish` command in console.
