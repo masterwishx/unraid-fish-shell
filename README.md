@@ -21,7 +21,7 @@
    Quick install without reboot needed:
 
    ```sh
-   wget -O /boot/extra/fish-4.5.0-x86_64-1_da.txz https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/main/slackware/fish-4.5.0-x86_64-1_da.txz && installpkg /boot/extra/fish-4.5.0-x86_64-1_da.txz
+   wget -O /boot/extra/fish-4.5.0-x86_64-1_da.txz https://raw.githubusercontent.com/masterwishx/unraid-fish-shell/main/slackware/fish/fish-4.5.0-x86_64-1_da.txz && installpkg /boot/extra/fish-4.5.0-x86_64-1_da.txz
    ```
 
 2. Run `fish` command in console.
