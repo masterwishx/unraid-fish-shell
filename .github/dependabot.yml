@@ -3,8 +3,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "cron"
-      cronjob: "*/5 * * * *"
+      interval: "daily"
     commit-message:
       prefix: "chore"
       include: "scope"
