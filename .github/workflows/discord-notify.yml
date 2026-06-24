@@ -213,25 +213,29 @@ jobs:
                   timestamp: $timestamp,
                   fields: (
                     [
-                      {name:"Repository", value:$repo, inline:true},
-                      {name:"Actor", value:$actor, inline:true}
+                      {name: "Repository", value: $repo, inline: true},
+                      {name: "Actor", value: $actor, inline: true}
                     ]
                     +
                     (
-                      ( ($event == "release") or ($new_release == "true") )
-                      ? ([
-                          {name:"Release Tag", value:$release_tag, inline:true},
-                          {name:"Release Name", value:$release_name, inline:true}
-                        ])
-                      : []
+                      if ($event == "release" or $new_release == "true") then
+                        [
+                          {name: "Release Tag", value: $release_tag, inline: true},
+                          {name: "Release Name", value: $release_name, inline: true}
+                        ]
+                      else
+                        []
+                      end
                     )
                     +
                     (
-                      ( ($event == "workflow_run") and ($duration != "") )
-                      ? ([
-                          {name:"Duration", value:$duration, inline:true}
-                        ])
-                      : []
+                      if ($event == "workflow_run" and $duration != "") then
+                        [
+                          {name: "Duration", value: $duration, inline: true}
+                        ]
+                      else
+                        []
+                      end
                     )
                   )
                 }
