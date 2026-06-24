@@ -200,7 +200,7 @@ jobs:
             --arg event "${EVENT}" \
             --arg new_release "${NEW_RELEASE}" \
             --arg duration "${DURATION}" \
-            --argjson color ${COLOR} \
+            --arg color ${COLOR} \
             '
             {
               content: $content,
@@ -209,7 +209,7 @@ jobs:
                   title: $title,
                   url: $url,
                   description: $desc,
-                  color: $color,
+                  color: $color | tonumber,
                   timestamp: $timestamp,
                   fields: (
                     [
