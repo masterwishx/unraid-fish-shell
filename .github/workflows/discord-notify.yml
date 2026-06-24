@@ -42,9 +42,9 @@ jobs:
           RELEASE_NAME=$(jq -r '.release_name' release_info.json)
           NEW_RELEASE=$(jq -r '.new_release' release_info.json)
 
-          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
-          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
-          echo "NEW_RELEASE=$NEW_RELEASE" >> $GITHUB_ENV
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> ${GITHUB_ENV}
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> ${GITHUB_ENV}
+          echo "NEW_RELEASE=${NEW_RELEASE}" >> ${GITHUB_ENV}
 
       # ---------------------------------------------------------
       # 3. Build & send Discord embed
@@ -84,25 +84,25 @@ jobs:
           # -----------------------------------------------------
           # Determine event type
           # -----------------------------------------------------
-          case "$EVENT" in
+          case "${EVENT}" in
             release)
               ICON="🚀"
               CONTENT="New Release Published"
-              TITLE="${RELEASE_NAME:-Release $RELEASE_TAG}"
-              URL="$RELEASE_URL"
-              BODY="$RELEASE_BODY"
+              TITLE="${RELEASE_NAME:-Release ${RELEASE_TAG}}"
+              URL="${RELEASE_URL}"
+              BODY="${RELEASE_BODY}"
               COLOR=3447003
               ;;
             pull_request)
-              URL="$PR_URL"
-              TITLE="$PR_TITLE"
-              BODY="$PR_BODY"
+              URL="${PR_URL}"
+              TITLE="${PR_TITLE}"
+              BODY="${PR_BODY}"
 
-              if [ "$ACTION" = "opened" ]; then
+              if [ "${ACTION}" = "opened" ]; then
                 ICON="🔀"
                 CONTENT="Pull Request Opened"
                 COLOR=5763719
-              elif [ "$ACTION" = "closed" ] && [ "$PR_MERGED" = "true" ]; then
+              elif [ "${ACTION}" = "closed" ] && [ "${PR_MERGED}" = "true" ]; then
                 ICON="🎉"
                 CONTENT="Pull Request Merged"
                 COLOR=8311585
@@ -113,15 +113,15 @@ jobs:
               fi
               ;;
             issues)
-              URL="$ISSUE_URL"
-              TITLE="$ISSUE_TITLE"
-              BODY="$ISSUE_BODY"
+              URL="${ISSUE_URL}"
+              TITLE="${ISSUE_TITLE}"
+              BODY="${ISSUE_BODY}"
 
-              if [ "$ACTION" = "opened" ]; then
+              if [ "${ACTION}" = "opened" ]; then
                 ICON="🐞"
                 CONTENT="New Issue Opened"
                 COLOR=16776960
-              elif [ "$ACTION" = "closed" ]; then
+              elif [ "${ACTION}" = "closed" ]; then
                 ICON="✅"
                 CONTENT="Issue Closed"
                 COLOR=10038562
@@ -132,11 +132,11 @@ jobs:
               fi
               ;;
             workflow_run)
-              URL="${WORKFLOW_URL:-https://github.com/$REPO/actions}"
-              TITLE="$WORKFLOW_NAME"
-              BODY="Workflow completed with conclusion: $WORKFLOW_CONCLUSION"
+              URL="${WORKFLOW_URL:-https://github.com/${REPO}/actions}"
+              TITLE="${WORKFLOW_NAME}"
+              BODY="Workflow completed with conclusion: ${WORKFLOW_CONCLUSION}"
 
-              if [ "$WORKFLOW_CONCLUSION" = "success" ]; then
+              if [ "${WORKFLOW_CONCLUSION}" = "success" ]; then
                 ICON="✅"
                 CONTENT="Workflow Succeeded"
                 COLOR=5763719
@@ -146,9 +146,9 @@ jobs:
                 COLOR=10038562
               fi
 
-              if [ "$NEW_RELEASE" = "true" ]; then
-                BODY="$BODY\nBuilt Version: $RELEASE_TAG"
-                TITLE="$TITLE — $RELEASE_TAG"
+              if [ "${NEW_RELEASE}" = "true" ]; then
+                BODY="${BODY}"$'\n'"Built Version: ${RELEASE_TAG}"
+                TITLE="${TITLE} — ${RELEASE_TAG}"
                 CONTENT="Workflow Succeeded — New Release"
               fi
               ;;
@@ -156,8 +156,8 @@ jobs:
               ICON="🧭"
               CONTENT="Manual Trigger"
               TITLE="Manual Trigger"
-              URL="https://github.com/$REPO"
-              BODY="Workflow manually triggered by $ACTOR"
+              URL="https://github.com/${REPO}"
+              BODY="Workflow manually triggered by ${ACTOR}"
               COLOR=8421504
               ;;
           esac
@@ -166,18 +166,18 @@ jobs:
           # Compute workflow duration
           # -----------------------------------------------------
           DURATION=""
-          if [ "$EVENT" = "workflow_run" ] && [ -n "$WORKFLOW_STARTED" ] && [ -n "$WORKFLOW_FINISHED" ]; then
-            START=$(date -d "$WORKFLOW_STARTED" +%s)
-            END=$(date -d "$WORKFLOW_FINISHED" +%s)
+          if [ "${EVENT}" = "workflow_run" ] && [ -n "${WORKFLOW_STARTED}" ] && [ -n "${WORKFLOW_FINISHED}" ]; then
+            START=$(date -d "${WORKFLOW_STARTED}" +%s)
+            END=$(date -d "${WORKFLOW_FINISHED}" +%s)
             SECONDS=$((END - START))
 
             H=$((SECONDS / 3600))
             M=$(((SECONDS % 3600) / 60))
             S=$((SECONDS % 60))
 
-            if [ $H -gt 0 ]; then
+            if [ ${H} -gt 0 ]; then
               DURATION="${H}h ${M}m ${S}s"
-            elif [ $M -gt 0 ]; then
+            elif [ ${M} -gt 0 ]; then
               DURATION="${M}m ${S}s"
             else
               DURATION="${S}s"
@@ -188,19 +188,19 @@ jobs:
           # Build JSON using jq (safe & correct)
           # -----------------------------------------------------
           JSON=$(jq -n \
-            --arg content "$ICON $CONTENT" \
-            --arg title "$TITLE" \
-            --arg url "$URL" \
-            --arg desc "$BODY" \
-            --arg actor "$ACTOR" \
-            --arg repo "$REPO" \
+            --arg content "${ICON} ${CONTENT}" \
+            --arg title "${TITLE}" \
+            --arg url "${URL}" \
+            --arg desc "${BODY}" \
+            --arg actor "${ACTOR}" \
+            --arg repo "${REPO}" \
             --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-            --arg release_tag "$RELEASE_TAG" \
-            --arg release_name "$RELEASE_NAME" \
-            --arg event "$EVENT" \
-            --arg new_release "$NEW_RELEASE" \
-            --arg duration "$DURATION" \
-            --argjson color "$COLOR" \
+            --arg release_tag "${RELEASE_TAG}" \
+            --arg release_name "${RELEASE_NAME}" \
+            --arg event "${EVENT}" \
+            --arg new_release "${NEW_RELEASE}" \
+            --arg duration "${DURATION}" \
+            --argjson color ${COLOR} \
             '
             {
               content: $content,
@@ -218,19 +218,19 @@ jobs:
                     ]
                     +
                     (
-                      ($event == "release" or $new_release == "true")
-                      ? [
+                      ( ($event == "release") or ($new_release == "true") )
+                      ? ([
                           {name:"Release Tag", value:$release_tag, inline:true},
                           {name:"Release Name", value:$release_name, inline:true}
-                        ]
+                        ])
                       : []
                     )
                     +
                     (
-                      ($event == "workflow_run" and $duration != "")
-                      ? [
+                      ( ($event == "workflow_run") and ($duration != "") )
+                      ? ([
                           {name:"Duration", value:$duration, inline:true}
-                        ]
+                        ])
                       : []
                     )
                   )
@@ -244,5 +244,5 @@ jobs:
           # Send to Discord
           # -----------------------------------------------------
           curl -H "Content-Type: application/json" \
-               -d "$JSON" \
-               "$WEBHOOK"
+               -d "${JSON}" \
+               "${WEBHOOK}"
