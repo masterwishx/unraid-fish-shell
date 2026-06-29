@@ -163,4 +163,3 @@ jobs:
         with:
           name: release_info
           path: release_info.json
-          
