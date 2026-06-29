@@ -49,7 +49,11 @@ jobs:
       # ---------------------------------------------------------
       # 3. Build & send Discord embed
       # ---------------------------------------------------------
+
+      # Notify unless workflow_run succeeded without a new release
       - name: Send Discord Notification
+        if: ${{ github.event_name != 'workflow_run' || env.NEW_RELEASE == 'true' || github.event.workflow_run.conclusion != 'success' }}
+
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           EVENT: ${{ github.event_name }}
